@@ -1,1 +1,2 @@
-# AirDrawing_with_Mediapipe_Android
+# Air Drawing with Mediapipe Hands in Android
+
