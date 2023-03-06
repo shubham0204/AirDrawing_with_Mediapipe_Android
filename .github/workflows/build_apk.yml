@@ -34,7 +34,7 @@ jobs:
         with:
           draft: false
           prerelease: false
-          release_name: AirDrawing App
+          release_name: AirDrawing App - ${{ steps.tag_version.outputs.new_tag }}
           tag_name: ${{ steps.tag_version.outputs.new_tag }}
           body_path: CHANGELOG.md
         env:

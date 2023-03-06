@@ -3,7 +3,6 @@ package com.shubham0204.ml.mediapipehandsdemo
 import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import kotlin.math.absoluteValue
 import kotlin.math.pow
 import kotlin.math.sqrt
 

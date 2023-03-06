@@ -1,9 +1,10 @@
 package com.shubham0204.ml.mediapipehandsdemo
 
-import android.graphics.Point
 import android.util.Log
 import androidx.compose.ui.graphics.Color
-import kotlin.math.*
+import kotlin.math.atan
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class BrushManager {
 

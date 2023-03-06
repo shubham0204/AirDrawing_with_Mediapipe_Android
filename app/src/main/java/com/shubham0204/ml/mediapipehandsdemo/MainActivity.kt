@@ -1,14 +1,16 @@
 package com.shubham0204.ml.mediapipehandsdemo
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.WindowInsets
@@ -23,14 +25,14 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -40,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -53,34 +54,41 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.Executors
+
 
 class MainActivity : ComponentActivity() {
 
 
     private val cameraPermissionEnabled = MutableLiveData( false )
+    private val controlsVisible = MutableLiveData( true )
+    private val controlsVisibilityHandler = Handler( Looper.getMainLooper() )
+    private val controlsVisibilityTimeout = 6000L
+
     private val drawColorName = MutableLiveData( Color.Blue )
     private val fingerPosition = MutableLiveData<IntArray>()
-    private val indexPosition = MutableLiveData<Point>()
-    private var layoutWidth  = 0
-    private var layoutHeight = 0
-    val path = Path()
-    val brushPath = BrushPath()
     private val brushManager = BrushManager()
     private lateinit var frameAnalyzer : FrameAnalyzer
+
+    private var layoutWidth  = 0
+    private var layoutHeight = 0
+
+    private val backgroundTint = Color( 232 , 190 , 172 , 128 )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             ActivityUI()
         }
-
+        startControlsVisibilityTimer()
         frameAnalyzer = FrameAnalyzer( this , resultCallback )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.decorView.windowInsetsController!!
@@ -110,38 +118,57 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun ActivityUI() {
         ConstraintLayout {
-            val ( preview , colorPicker , exportButton ) = createRefs()
-            CameraPreview( modifier = Modifier.constrainAs( preview ) {
+            val preview = createRef()
+            Camera( modifier = Modifier.constrainAs( preview ) {
                 absoluteLeft.linkTo( parent.absoluteLeft )
                 absoluteRight.linkTo( parent.absoluteRight )
                 top.linkTo( parent.top )
                 bottom.linkTo( parent.bottom )
             } )
-            ColorPicker(
-                modifier = Modifier
-                    .constrainAs(colorPicker) {
-                        absoluteRight.linkTo(parent.absoluteRight)
-                        top.linkTo(parent.top)
-                    }
-                    .padding(16.dp)
-            )
-            Button(
-                onClick = { exportImage() } ,
-                modifier = Modifier
-                    .constrainAs(exportButton) {
-                        absoluteLeft.linkTo(parent.absoluteLeft)
-                        top.linkTo(parent.top)
-                    }
-                    .padding(16.dp)
-            ) {
-                Text(text = "Export" )
-            }
+            DrawingControls()
         }
     }
 
     @Composable
-    private fun ColorPicker( modifier: Modifier ) {
+    private fun DrawingControls() {
+        val areControlsVisible by controlsVisible.observeAsState()
+        val cameraPermission by cameraPermissionEnabled.observeAsState()
+        AnimatedVisibility( visible = (areControlsVisible ?: true) && (cameraPermission ?: false) ,
+            enter = slideInVertically() ,
+            exit = slideOutVertically()
+        ) {
+            ConstraintLayout( modifier = Modifier.fillMaxWidth() ) {
+                val ( colorPicker , exportButton ) = createRefs()
+                Log.e( "APP" , "Visibility Animated" )
+                ColorPicker(
+                    modifier = Modifier
+                        .constrainAs(colorPicker) {
+                            absoluteRight.linkTo(parent.absoluteRight)
+                            top.linkTo(parent.top)
+                        }
+                        .padding(16.dp)
+                )
+                Button(
+                    onClick = { shareImage() } ,
+                    modifier = Modifier
+                        .constrainAs(exportButton) {
+                            absoluteLeft.linkTo(parent.absoluteLeft)
+                            top.linkTo(parent.top)
+                        }
+                        .padding(16.dp) ,
+                    colors = ButtonDefaults.buttonColors( containerColor = Color.White , contentColor = Color.Blue )
+                ) {
+                    Icon( imageVector=Icons.Default.Share , contentDescription="Share drawing" )
+                    Text(text = "Share" )
+                }
+            }
 
+        }
+    }
+
+
+    @Composable
+    private fun ColorPicker( modifier: Modifier ) {
         Row( modifier = modifier ) {
             ColorPatch(color = Color.Red )
             ColorPatch(color = Color.Yellow )
@@ -171,19 +198,33 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun CameraPreview( modifier: Modifier ) {
+    private fun Camera( modifier: Modifier ) {
         val cameraPermissionState by cameraPermissionEnabled.observeAsState()
-        AnimatedVisibility(visible = cameraPermissionState!! ) {
-            Preview(  modifier.fillMaxSize() )
+        CameraPreview(modifier = modifier, isVisible = cameraPermissionState ?: false )
+        CameraPermissionStatus(isVisible = !(cameraPermissionState ?: false))
+    }
+
+    @Composable
+    private fun CameraPreview( modifier: Modifier , isVisible : Boolean ) {
+        Log.e( "APP" , "Redrawing camera" )
+        AnimatedVisibility(visible = isVisible ) {
+            CameraXPreview(  modifier.fillMaxSize() )
             DrawingBackground( modifier )
             DrawingOverlay()
         }
-        AnimatedVisibility(visible = !cameraPermissionState!!) {
+    }
+
+    @Composable
+    private fun CameraPermissionStatus( isVisible: Boolean ) {
+        AnimatedVisibility(visible = isVisible) {
             Box( modifier = Modifier.fillMaxSize() ) {
                 Column( modifier = Modifier.align( Alignment.Center )) {
                     Text( text = "Allow Camera Permissions" )
                     Text( text = "The app cannot work without the camera permission." )
-                    Button(onClick = { requestCameraPermission() }) {
+                    Button(
+                        onClick = { requestCameraPermission() } ,
+                        modifier = Modifier.align( Alignment.CenterHorizontally )
+                    ) {
                         Text(text = "Allow")
                     }
                 }
@@ -198,16 +239,22 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = modifier
                 .fillMaxSize()
-                .pointerInput( Unit ) {
+                .pointerInput(Unit) {
                     detectTapGestures(
+                        onTap = {
+                            controlsVisible.value = true
+                            startControlsVisibilityTimer()
+                        },
                         onDoubleTap = {
                             brushManager.clear()
                             fingerPosition.value = IntArray(4)
-                            Toast.makeText(context, "Screen cleared.", Toast.LENGTH_SHORT).show()
+                            Toast
+                                .makeText(context, "Screen cleared.", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     )
                 },
-            color = Color( 232 , 190 , 172 , 128 )
+            color = backgroundTint
         ) {}
     }
 
@@ -236,7 +283,10 @@ class MainActivity : ComponentActivity() {
                             drawPath(
                                 path = brushPath.path,
                                 color = brushPath.color,
-                                style = Stroke(5.dp.toPx() , pathEffect = PathEffect.cornerPathEffect( 10.0f ))
+                                style = Stroke(
+                                    5.dp.toPx(),
+                                    pathEffect = PathEffect.cornerPathEffect(10.0f)
+                                )
                             )
                         }
                         drawPath(
@@ -261,9 +311,8 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-
     @Composable
-    private fun Preview( modifier: Modifier ) {
+    private fun CameraXPreview(modifier: Modifier ) {
         val lifecycleOwner = LocalLifecycleOwner.current
         val context = LocalContext.current
         val cameraProviderFuture = remember{ ProcessCameraProvider.getInstance( context ) }
@@ -299,26 +348,53 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun exportImage() {
-        val outputBitmap = Bitmap.createBitmap( layoutWidth , layoutHeight , Bitmap.Config.ARGB_8888 )
-        val canvas = Canvas( outputBitmap )
-        val paint = Paint().apply {
-            style = Paint.Style.STROKE
-            strokeWidth = 5.0f
-        }
-        canvas.drawColor( android.graphics.Color.WHITE )
-        for( brushPath in brushManager.getAllStrokes() ) {
-            paint.color = android.graphics.Color.rgb(
-                ( brushPath.color.red * 255 ).toInt() ,
-                ( brushPath.color.green * 255 ).toInt() ,
-                ( brushPath.color.blue * 255 ).toInt()
-            )
-            canvas.drawPath( brushPath.path.asAndroidPath() , paint)
-        }
-        val tempFile = File( filesDir , "image.png" )
-        FileOutputStream( tempFile ).apply {
-            outputBitmap.compress( Bitmap.CompressFormat.PNG , 100 , this )
-            close()
+
+    private fun startControlsVisibilityTimer() {
+        controlsVisibilityHandler.removeCallbacks( switchControlsVisibilityRunnable )
+        controlsVisibilityHandler.postDelayed( switchControlsVisibilityRunnable , controlsVisibilityTimeout )
+    }
+
+    private val switchControlsVisibilityRunnable = Runnable {
+        Log.e( "APP" , "False Visible" )
+        controlsVisible.value = false
+    }
+
+    private fun shareImage() {
+        CoroutineScope( Dispatchers.IO ).launch {
+            val outputBitmap = Bitmap.createBitmap( layoutWidth , layoutHeight , Bitmap.Config.ARGB_8888 )
+            val canvas = Canvas( outputBitmap )
+            val paint = Paint().apply {
+                style = Paint.Style.STROKE
+                strokeWidth = 5.0f
+            }
+            canvas.drawColor( android.graphics.Color.WHITE )
+            for( brushPath in brushManager.getAllStrokes() ) {
+                paint.color = android.graphics.Color.rgb(
+                    ( brushPath.color.red * 255 ).toInt() ,
+                    ( brushPath.color.green * 255 ).toInt() ,
+                    ( brushPath.color.blue * 255 ).toInt()
+                )
+                canvas.drawPath( brushPath.path.asAndroidPath() , paint)
+            }
+            val dirFile = File( filesDir , "saved_images" ).apply{
+                if( !exists() ) {
+                    mkdir()
+                }
+            }
+            val tempFile = File( dirFile , "temp.png" )
+            withContext( Dispatchers.IO ) {
+                FileOutputStream( tempFile ).apply {
+                    outputBitmap.compress(Bitmap.CompressFormat.PNG, 100, this)
+                    close()
+                }
+            }
+            withContext( Dispatchers.Main ) {
+                val intent = Intent(Intent.ACTION_SEND)
+                intent.type = "image/png"
+                intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile( this@MainActivity ,
+                    packageName , tempFile ))
+                startActivity(intent)
+            }
         }
     }
 
