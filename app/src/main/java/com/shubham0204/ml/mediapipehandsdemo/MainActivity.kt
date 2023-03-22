@@ -67,7 +67,6 @@ import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
 
-
     private val cameraPermissionEnabled = MutableLiveData( false )
     private val controlsVisible = MutableLiveData( true )
     private val controlsVisibilityHandler = Handler( Looper.getMainLooper() )
@@ -90,6 +89,8 @@ class MainActivity : ComponentActivity() {
         }
         startControlsVisibilityTimer()
         frameAnalyzer = FrameAnalyzer( this , resultCallback )
+
+        // Enable fullscreen mode for immersive experience
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.decorView.windowInsetsController!!
                 .hide( WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
@@ -98,6 +99,7 @@ class MainActivity : ComponentActivity() {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
         }
 
+        // Check if user has granted the CAMERA permission, else request it
         if ( ActivityCompat.checkSelfPermission( this , Manifest.permission.CAMERA )
             != PackageManager.PERMISSION_GRANTED ) {
             requestCameraPermission()
@@ -133,13 +135,14 @@ class MainActivity : ComponentActivity() {
     private fun DrawingControls() {
         val areControlsVisible by controlsVisible.observeAsState()
         val cameraPermission by cameraPermissionEnabled.observeAsState()
+        // Display drawing controls only when areControlsVisible = true and cameraPermission = true
         AnimatedVisibility( visible = (areControlsVisible ?: true) && (cameraPermission ?: false) ,
             enter = slideInVertically() ,
             exit = slideOutVertically()
         ) {
             ConstraintLayout( modifier = Modifier.fillMaxWidth() ) {
                 val ( colorPicker , exportButton ) = createRefs()
-                Log.e( "APP" , "Visibility Animated" )
+                // ColorPicker composable that shows color patches
                 ColorPicker(
                     modifier = Modifier
                         .constrainAs(colorPicker) {
@@ -148,6 +151,7 @@ class MainActivity : ComponentActivity() {
                         }
                         .padding(16.dp)
                 )
+                // 'Share' button which lets users share their drawings
                 Button(
                     onClick = { shareImage() } ,
                     modifier = Modifier
@@ -170,9 +174,9 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun ColorPicker( modifier: Modifier ) {
         Row( modifier = modifier ) {
-            ColorPatch(color = Color.Red )
-            ColorPatch(color = Color.Yellow )
-            ColorPatch(color = Color.Blue )
+            ColorPatch(color = Color.Red)
+            ColorPatch(color = Color.Yellow)
+            ColorPatch(color = Color.Blue)
             ColorPatch(color = Color.Black)
             ColorPatch(color = Color.Green)
         }
@@ -200,13 +204,14 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun Camera( modifier: Modifier ) {
         val cameraPermissionState by cameraPermissionEnabled.observeAsState()
+        // Show CameraPermissionStatus if cameraPermissionState = false i.e. user hasn't granted CAMERA permission
+        // Else, show the CameraPreview
         CameraPreview(modifier = modifier, isVisible = cameraPermissionState ?: false )
         CameraPermissionStatus(isVisible = !(cameraPermissionState ?: false))
     }
 
     @Composable
     private fun CameraPreview( modifier: Modifier , isVisible : Boolean ) {
-        Log.e( "APP" , "Redrawing camera" )
         AnimatedVisibility(visible = isVisible ) {
             CameraXPreview(  modifier.fillMaxSize() )
             DrawingBackground( modifier )
@@ -273,7 +278,7 @@ class MainActivity : ComponentActivity() {
                 .drawWithCache {
                     Log.e("State", "Moving Point recomposed")
                     val drawPos = position ?: IntArray(4)
-                    val fingerPosition = FingerPositions(
+                    val fingerPosition = HandLandmarks(
                         Point(drawPos[0], drawPos[1]),
                         Point(drawPos[2], drawPos[3])
                     )
@@ -282,7 +287,7 @@ class MainActivity : ComponentActivity() {
                         for (brushPath in brushManager.getAllStrokes()) {
                             drawPath(
                                 path = brushPath.path,
-                                color = brushPath.color,
+                                color = brushPath.pathColor,
                                 style = Stroke(
                                     5.dp.toPx(),
                                     pathEffect = PathEffect.cornerPathEffect(10.0f)
@@ -370,9 +375,9 @@ class MainActivity : ComponentActivity() {
             canvas.drawColor( android.graphics.Color.WHITE )
             for( brushPath in brushManager.getAllStrokes() ) {
                 paint.color = android.graphics.Color.rgb(
-                    ( brushPath.color.red * 255 ).toInt() ,
-                    ( brushPath.color.green * 255 ).toInt() ,
-                    ( brushPath.color.blue * 255 ).toInt()
+                    ( brushPath.pathColor.red * 255 ).toInt() ,
+                    ( brushPath.pathColor.green * 255 ).toInt() ,
+                    ( brushPath.pathColor.blue * 255 ).toInt()
                 )
                 canvas.drawPath( brushPath.path.asAndroidPath() , paint)
             }
@@ -393,7 +398,7 @@ class MainActivity : ComponentActivity() {
                 intent.type = "image/png"
                 intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile( this@MainActivity ,
                     packageName , tempFile ))
-                startActivity(intent)
+                startActivity( intent )
             }
         }
     }

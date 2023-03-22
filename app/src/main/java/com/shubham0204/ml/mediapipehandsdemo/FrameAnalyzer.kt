@@ -3,6 +3,7 @@ package com.shubham0204.ml.mediapipehandsdemo
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.mediapipe.framework.image.BitmapImageBuilder
@@ -29,8 +30,12 @@ class FrameAnalyzer( context : Context , private val handLandmarksResult : ( Int
             result, input ->
         isProcessing = false
         for( handResult in result.landmarks() ) {
-            val landmark1 = handResult[8]
-            val landmark2 = handResult[4]
+            val landmark1 = handResult[8]  // Indicates INDEX_FINGER_TIP landmark
+            val landmark2 = handResult[4]  // Indicates THUMB_UP landmark
+            // landmark1 and landmark2 have normalized coordinates (lie in range [0, 1])
+            // We multiply x-coordinates with the width of the screen
+            // and y-coordinates with the height of the screen
+            // to obtain coordinates for the screen
             handLandmarksResult( intArrayOf(
                 ( landmark2.x() * layoutWidth  ).toInt() ,
                 ( landmark2.y() * layoutHeight ).toInt() ,
@@ -38,18 +43,23 @@ class FrameAnalyzer( context : Context , private val handLandmarksResult : ( Int
                 ( landmark1.y() * layoutHeight ).toInt() )  )
         }
         if( result.landmarks().size == 0 ) {
+            // If no landmarks are detected, pass an array of zeros
             handLandmarksResult( IntArray( 4 ) )
         }
     }
 
     private val errorListener = ErrorListener {
-
+        // Handle MediaPipe errors here
+        Log.e( context.getString( R.string.app_name ) , "MediaPipe Error: $it")
     }
 
     init {
+        // Build the HandLandmarker solution
+        // The corresponding .task file is placed in app/src/main/assets
         val baseOptionsBuilder = BaseOptions.builder()
-            .setModelAssetPath( "hand_landmarker.task" )
             .setDelegate( Delegate.GPU )
+            .setModelAssetPath( "hand_landmarker.task" )
+
         val baseOptions = baseOptionsBuilder.build()
         val optionsBuilder =
             HandLandmarker.HandLandmarkerOptions.builder()
@@ -64,23 +74,32 @@ class FrameAnalyzer( context : Context , private val handLandmarksResult : ( Int
 
     override fun analyze(image: ImageProxy) {
         if( isProcessing ) {
+            // An image is currently in processing, close the current image and return
             image.close()
             return
         }
         isProcessing = true
+
         var bitmapBuffer = Bitmap.createBitmap( image.width , image.height, Bitmap.Config.ARGB_8888 )
         image.use{ bitmapBuffer.copyPixelsFromBuffer(image.planes[0].buffer) }
+
+        // Initialize image-to-overlay transformation
+        // This requires the camera frame's width and height
         if( !isOverlayTransformInitialized ) {
             overlayTransform.apply {
+                // Rotate the points to compensate for image rotation
                 postRotate( image.imageInfo.rotationDegrees.toFloat())
+                // Mirror the points as front-camera is being used
                 postScale(-1f, 1f, image.width.toFloat(), image.height.toFloat() )
             }
             isOverlayTransformInitialized = true
         }
         image.close()
+
         bitmapBuffer = Bitmap.createBitmap(
             bitmapBuffer, 0, 0, bitmapBuffer.width, bitmapBuffer.height,
             overlayTransform, true)
+
         handLandmarker.detectAsync( BitmapImageBuilder( bitmapBuffer ).build() , System.currentTimeMillis() )
     }
 

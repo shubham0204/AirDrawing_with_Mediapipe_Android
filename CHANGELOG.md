@@ -1,5 +1,2 @@
-- Fixed `Allow Camera Permissions` button alignment
-- Added `Share Image` button and its logic
-- Animated visibility for color picker and share button
-- Rearranged widgets to avoid multiple recompositions
-- Added `FileProvider` in `AndroidManifest.xml`
+- Added documentation for code
+- Added `download_tasks.gradle` to download `.task` models while building the app

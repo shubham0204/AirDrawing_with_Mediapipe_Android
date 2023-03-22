@@ -13,7 +13,7 @@ class BrushManager {
     private var currentStroke = BrushPath()
     private val fingerDrawingThreshold = 70.0f
 
-    fun nextPoints( positions : FingerPositions , color : Color ) {
+    fun nextPoints(positions : HandLandmarks, color : Color ) {
         val x1 = positions.thumb.x
         val y1 = positions.thumb.y
         val x2 = positions.index.x
@@ -33,7 +33,7 @@ class BrushManager {
         else {
             strokes.add( currentStroke )
             currentStroke = BrushPath()
-            currentStroke.color = color
+            currentStroke.pathColor = color
             newStrokeAdded = true
         }
     }
