@@ -15,12 +15,16 @@ import com.google.mediapipe.tasks.core.OutputHandler
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarkerResult
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.channels.Channels
+import java.nio.channels.FileChannel
 
-class FrameAnalyzer( context : Context , private val handLandmarksResult : ( IntArray ) -> Unit )
+class FrameAnalyzer( private val context : Context , private val handLandmarksResult : ( IntArray ) -> Unit )
     : ImageAnalysis.Analyzer {
 
     private var isProcessing = false
-    private val handLandmarker : HandLandmarker
+    private lateinit var handLandmarker : HandLandmarker
     private var layoutHeight = 0
     private var layoutWidth = 0
     private var isOverlayTransformInitialized = false
@@ -53,11 +57,11 @@ class FrameAnalyzer( context : Context , private val handLandmarksResult : ( Int
         Log.e( context.getString( R.string.app_name ) , "MediaPipe Error: $it")
     }
 
-    init {
+    fun setupHandLandmarker() {
         // Build the HandLandmarker solution
         // The corresponding .task file is placed in app/src/main/assets
         val baseOptionsBuilder = BaseOptions.builder()
-            .setDelegate( Delegate.GPU )
+            .setDelegate( Delegate.CPU )
             .setModelAssetPath( "hand_landmarker.task" )
 
         val baseOptions = baseOptionsBuilder.build()
@@ -70,6 +74,10 @@ class FrameAnalyzer( context : Context , private val handLandmarksResult : ( Int
                 .setRunningMode(RunningMode.LIVE_STREAM)
         val options = optionsBuilder.build()
         handLandmarker = HandLandmarker.createFromOptions( context , options )
+    }
+
+    init {
+
     }
 
     override fun analyze(image: ImageProxy) {

@@ -1,2 +1,4 @@
-- Added documentation for code
-- Added `download_tasks.gradle` to download `.task` models while building the app
+- Updated `build.gradle`
+- Updated `download_tasks.gradle`
+- Add app icon
+- 

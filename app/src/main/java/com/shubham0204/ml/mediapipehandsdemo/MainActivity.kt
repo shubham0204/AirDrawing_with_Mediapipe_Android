@@ -89,6 +89,10 @@ class MainActivity : ComponentActivity() {
         }
         startControlsVisibilityTimer()
         frameAnalyzer = FrameAnalyzer( this , resultCallback )
+        val executor = Executors.newSingleThreadExecutor()
+        executor.execute {
+            frameAnalyzer.setupHandLandmarker()
+        }
 
         // Enable fullscreen mode for immersive experience
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
