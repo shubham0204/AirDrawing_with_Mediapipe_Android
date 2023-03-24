@@ -1,6 +1,5 @@
 package com.shubham0204.ml.mediapipehandsdemo
 
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import kotlin.math.pow
@@ -29,7 +28,6 @@ class BrushPath {
 
     fun addPoint( x : Int , y : Int ) {
         val distance = sqrt( ( x - prevPosX ).toFloat().pow(2) + ( y - prevPosY ).toFloat().pow(2) )
-        Log.e( "Distance" , "Distance: " + distance )
         // Check if distance from previous point is greater than a predefined threshold
         // It asserts that random fluctuations in MediaPipe predictions are not drawn on
         // the screen - eliminate jitterness

@@ -1,6 +1,5 @@
 package com.shubham0204.ml.mediapipehandsdemo
 
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import kotlin.math.atan
 import kotlin.math.pow
@@ -12,10 +11,11 @@ class BrushManager {
     private val strokes = ArrayList<BrushPath>()
     private var currentStroke = BrushPath()
     private val fingerDrawingThreshold = 70.0f
+    var isDrawing = false
 
     fun nextPoints(positions : HandLandmarks, color : Color ) {
-        val x1 = positions.thumb.x
-        val y1 = positions.thumb.y
+        val x1 = positions.middleFinger.x
+        val y1 = positions.middleFinger.y
         val x2 = positions.index.x
         val y2 = positions.index.y
         if( distance( x1 , y1 , x2 , y2 ) < fingerDrawingThreshold  ) {
@@ -26,7 +26,7 @@ class BrushManager {
                 newStrokeAdded = false
             }
             if( x2 != 0 && y2 != 0 ) {
-                Log.e( "Added" , "X :  , $midX Y2 , $midY")
+                isDrawing = true
                 addPointToStroke( midX , midY )
             }
         }
@@ -34,6 +34,7 @@ class BrushManager {
             strokes.add( currentStroke )
             currentStroke = BrushPath()
             currentStroke.pathColor = color
+            isDrawing = false
             newStrokeAdded = true
         }
     }

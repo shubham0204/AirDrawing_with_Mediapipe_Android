@@ -1,4 +1,4 @@
-- Updated `build.gradle`
-- Updated `download_tasks.gradle`
-- Add app icon
-- 
+- Changed task download URL to `https://storage.googleapis.com/mediapipe-assets/hand_landmarker.task?generation=1677051718270846`
+- Upgraded `kotlinCompilerExtensionVersion` from `1.2.0 -> 1.4.0`
+- Changed Thumb-Index fingers proximity to Middle-Index fingers proximity for drawing
+- Index finger and thumb indicators change color when drawing has started

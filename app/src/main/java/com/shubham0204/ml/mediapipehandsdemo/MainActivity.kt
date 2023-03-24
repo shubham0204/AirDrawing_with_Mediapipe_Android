@@ -11,7 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.widget.Toast
@@ -72,7 +71,7 @@ class MainActivity : ComponentActivity() {
     private val controlsVisibilityHandler = Handler( Looper.getMainLooper() )
     private val controlsVisibilityTimeout = 6000L
 
-    private val drawColorName = MutableLiveData( Color.Blue )
+    private val drawColorName = MutableLiveData( Color.Black )
     private val fingerPosition = MutableLiveData<IntArray>()
     private val brushManager = BrushManager()
     private lateinit var frameAnalyzer : FrameAnalyzer
@@ -116,7 +115,6 @@ class MainActivity : ComponentActivity() {
 
     private val resultCallback = { pos : IntArray ->
         val job = CoroutineScope( Dispatchers.Main ).launch {
-            Log.e( "State" , "Livedata updated " + pos.contentToString() )
             fingerPosition.value = pos
         }
     }
@@ -270,7 +268,6 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun DrawingOverlay() {
         val position by fingerPosition.observeAsState()
-        Log.e( "State" , "Moving Point recomposed" )
         Spacer(
             modifier= Modifier
                 .fillMaxSize()
@@ -280,7 +277,6 @@ class MainActivity : ComponentActivity() {
                     frameAnalyzer.setLayoutDims(layoutWidth, layoutHeight)
                 }
                 .drawWithCache {
-                    Log.e("State", "Moving Point recomposed")
                     val drawPos = position ?: IntArray(4)
                     val fingerPosition = HandLandmarks(
                         Point(drawPos[0], drawPos[1]),
@@ -302,16 +298,16 @@ class MainActivity : ComponentActivity() {
                             brushManager
                                 .getCurrentStroke()
                                 .path,
-                            color = drawColorName.value ?: Color.Blue,
+                            color = drawColorName.value ?: Color.Black,
                             style = Stroke(5.dp.toPx())
                         )
                         drawCircle(
-                            color = Color.White,
+                            color = if( brushManager.isDrawing ) { drawColorName.value ?: Color.Black } else { Color.White },
                             radius = 10.0f,
                             center = Offset(drawPos[0].toFloat(), drawPos[1].toFloat())
                         )
                         drawCircle(
-                            color = Color.White,
+                            color = if( brushManager.isDrawing ) { drawColorName.value ?: Color.Black } else { Color.White },
                             radius = 10.0f,
                             center = Offset(drawPos[2].toFloat(), drawPos[3].toFloat())
                         )
@@ -364,7 +360,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private val switchControlsVisibilityRunnable = Runnable {
-        Log.e( "APP" , "False Visible" )
         controlsVisible.value = false
     }
 

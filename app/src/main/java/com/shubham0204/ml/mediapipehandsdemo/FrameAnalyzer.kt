@@ -15,16 +15,12 @@ import com.google.mediapipe.tasks.core.OutputHandler
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarkerResult
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.channels.Channels
-import java.nio.channels.FileChannel
 
 class FrameAnalyzer( private val context : Context , private val handLandmarksResult : ( IntArray ) -> Unit )
     : ImageAnalysis.Analyzer {
 
     private var isProcessing = false
-    private lateinit var handLandmarker : HandLandmarker
+    private var handLandmarker : HandLandmarker? = null
     private var layoutHeight = 0
     private var layoutWidth = 0
     private var isOverlayTransformInitialized = false
@@ -35,7 +31,7 @@ class FrameAnalyzer( private val context : Context , private val handLandmarksRe
         isProcessing = false
         for( handResult in result.landmarks() ) {
             val landmark1 = handResult[8]  // Indicates INDEX_FINGER_TIP landmark
-            val landmark2 = handResult[4]  // Indicates THUMB_UP landmark
+            val landmark2 = handResult[12]  // Indicates MIDDLE_FINGER_TIP landmark
             // landmark1 and landmark2 have normalized coordinates (lie in range [0, 1])
             // We multiply x-coordinates with the width of the screen
             // and y-coordinates with the height of the screen
@@ -61,7 +57,7 @@ class FrameAnalyzer( private val context : Context , private val handLandmarksRe
         // Build the HandLandmarker solution
         // The corresponding .task file is placed in app/src/main/assets
         val baseOptionsBuilder = BaseOptions.builder()
-            .setDelegate( Delegate.CPU )
+            .setDelegate( Delegate.GPU )
             .setModelAssetPath( "hand_landmarker.task" )
 
         val baseOptions = baseOptionsBuilder.build()
@@ -108,7 +104,9 @@ class FrameAnalyzer( private val context : Context , private val handLandmarksRe
             bitmapBuffer, 0, 0, bitmapBuffer.width, bitmapBuffer.height,
             overlayTransform, true)
 
-        handLandmarker.detectAsync( BitmapImageBuilder( bitmapBuffer ).build() , System.currentTimeMillis() )
+        if( handLandmarker != null ) {
+            handLandmarker!!.detectAsync( BitmapImageBuilder( bitmapBuffer ).build() , System.currentTimeMillis() )
+        }
     }
 
     fun setLayoutDims( width : Int , height : Int ) {
