@@ -27,7 +27,8 @@ Nougat) with developer mode enabled. The process of enabling developer mode may 
 * Clone the repository on your system with,
 
 ```
-git clone --depth=1 https://github.com/shubham0204/AirDrawing_with_Mediapipe_Android
+git clone --depth=1 https://github.com/shubham0204/AirDrawing_with_Mediapipe_Android![image-removebg-preview](https://user-images.githubusercontent.com/106607805/227760929-bd64f9f4-a888-4fc7-8017-152e4aaf48c4.png)
+
 ```
 
 * Open the resulting folder in Android Studio. You may be asked if you trust the project. Select Trust.
