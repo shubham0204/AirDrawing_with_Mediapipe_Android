@@ -7,6 +7,8 @@ to detect specific landmarks on the user's hand and uses them to draw strokes on
 
 The app's UI is written with [Jetpack Compose](https://developer.android.com/jetpack/compose) and uses [CameraX](https://developer.android.com/training/camerax) 
 for displaying the camera preview.
+![app_demo-min](https://user-images.githubusercontent.com/106607805/227761872-938aacfd-03ca-4d2e-b788-c0e6fe954b16.gif)
+
 
 ## Build the demo using Android Studio
 
@@ -20,6 +22,7 @@ Nougat) with developer mode enabled. The process of enabling developer mode may 
 ![App Demo](https://github.com/swarajgosavi/AirDrawing_with_Mediapipe_Android/blob/main/app_demo.gif)
 ![](app_demo.gif)
 ![image-removebg-preview](https://user-images.githubusercontent.com/106607805/227760929-bd64f9f4-a888-4fc7-8017-152e4aaf48c4.png)
+
 
 > Watch the [video on YouTube](https://youtu.be/hvw4MFvplok)
 > *The demo is recorded on an Android 12 device with a 32-bit Samsung Exynos 850 processor (4GB RAM)
