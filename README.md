@@ -19,9 +19,6 @@ for displaying the camera preview.
 * A physical Android device with a minimum OS version of SDK 24 (Android 7.0 - 
 Nougat) with developer mode enabled. The process of enabling developer mode may vary by device.
 
-![App Demo](https://github.com/swarajgosavi/AirDrawing_with_Mediapipe_Android/blob/main/app_demo.gif)
-![](app_demo.gif)
-![image-removebg-preview](https://user-images.githubusercontent.com/106607805/227760929-bd64f9f4-a888-4fc7-8017-152e4aaf48c4.png)
 
 
 > Watch the [video on YouTube](https://youtu.be/hvw4MFvplok)
