@@ -3,10 +3,7 @@ package com.shubham0204.ml.mediapipehandsdemo
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Point
+import android.graphics.*
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -33,11 +30,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -57,6 +56,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -72,14 +72,14 @@ class MainActivity : ComponentActivity() {
     private val controlsVisibilityTimeout = 6000L
 
     private val drawColorName = MutableLiveData( Color.Black )
-    private val fingerPosition = MutableLiveData<IntArray>()
+    private val fingerPosition = MutableLiveData<FloatArray>()
     private val brushManager = BrushManager()
     private lateinit var frameAnalyzer : FrameAnalyzer
 
     private var layoutWidth  = 0
     private var layoutHeight = 0
 
-    private val backgroundTint = Color( 232 , 190 , 172 , 128 )
+    private val backgroundTint = Color( 3 , 240 , 240 , 200 )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,7 +113,7 @@ class MainActivity : ComponentActivity() {
 
     }
 
-    private val resultCallback = { pos : IntArray ->
+    private val resultCallback = { pos : FloatArray ->
         val job = CoroutineScope( Dispatchers.Main ).launch {
             fingerPosition.value = pos
         }
@@ -254,7 +254,7 @@ class MainActivity : ComponentActivity() {
                         },
                         onDoubleTap = {
                             brushManager.clear()
-                            fingerPosition.value = IntArray(4)
+                            fingerPosition.value = FloatArray(4)
                             Toast
                                 .makeText(context, "Screen cleared.", Toast.LENGTH_SHORT)
                                 .show()
@@ -277,10 +277,10 @@ class MainActivity : ComponentActivity() {
                     frameAnalyzer.setLayoutDims(layoutWidth, layoutHeight)
                 }
                 .drawWithCache {
-                    val drawPos = position ?: IntArray(4)
+                    val drawPos = position ?: FloatArray(4)
                     val fingerPosition = HandLandmarks(
-                        Point(drawPos[0], drawPos[1]),
-                        Point(drawPos[2], drawPos[3])
+                        PointF(drawPos[0], drawPos[1]),
+                        PointF(drawPos[2], drawPos[3])
                     )
                     brushManager.nextPoints(fingerPosition, drawColorName.value ?: Color.Blue)
                     onDrawBehind {
@@ -288,26 +288,29 @@ class MainActivity : ComponentActivity() {
                             drawPath(
                                 path = brushPath.path,
                                 color = brushPath.pathColor,
-                                style = Stroke(
-                                    5.dp.toPx(),
-                                    pathEffect = PathEffect.cornerPathEffect(10.0f)
-                                )
+                                style = Stroke( 5.dp.toPx() )
                             )
                         }
                         drawPath(
-                            brushManager
-                                .getCurrentStroke()
-                                .path,
+                            brushManager.getCurrentStroke().path,
                             color = drawColorName.value ?: Color.Black,
                             style = Stroke(5.dp.toPx())
                         )
                         drawCircle(
-                            color = if( brushManager.isDrawing ) { drawColorName.value ?: Color.Black } else { Color.White },
+                            color = if (brushManager.isDrawing) {
+                                drawColorName.value ?: Color.Black
+                            } else {
+                                Color.White
+                            },
                             radius = 10.0f,
                             center = Offset(drawPos[0].toFloat(), drawPos[1].toFloat())
                         )
                         drawCircle(
-                            color = if( brushManager.isDrawing ) { drawColorName.value ?: Color.Black } else { Color.White },
+                            color = if (brushManager.isDrawing) {
+                                drawColorName.value ?: Color.Black
+                            } else {
+                                Color.White
+                            },
                             radius = 10.0f,
                             center = Offset(drawPos[2].toFloat(), drawPos[3].toFloat())
                         )

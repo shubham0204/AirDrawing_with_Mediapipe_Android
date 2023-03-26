@@ -1,14 +1,15 @@
 package com.shubham0204.ml.mediapipehandsdemo
 
 import android.graphics.Point
+import android.graphics.PointF
 
 // Data class which holds landmarks for the thumb and index finger
 data class HandLandmarks(
-    val middleFinger : Point,
-    val index : Point
+    val middleFinger : PointF,
+    val index : PointF
 ) {
 
-    constructor() : this( Point( 0 , 0 ) , Point( 0 , 0 ))
+    constructor() : this( PointF( 0.0f , 0.0f ) , PointF( 0.0f , 0.0f ))
 
     override fun toString(): String {
         return "Middle Finger: $middleFinger  Index: $index"

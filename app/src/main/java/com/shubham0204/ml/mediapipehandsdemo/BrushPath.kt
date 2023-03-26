@@ -9,33 +9,36 @@ import kotlin.math.sqrt
 // to provide quadratic curve approximation and eliminate drawing noise
 class BrushPath {
 
-    private var prevPosX = 0
-    private var prevPosY = 0
+    private var prevPosX = 0.0f
+    private var prevPosY = 0.0f
+    private var midX = 0.0f
+    private var midY = 0.0f
+    private var distance = 0.0f
 
     // Threshold which determines whether a curve should be drawn from ( prevPosX , prevPosY ) to ( x , y )
     // Smaller the value, greater is the freedom to draw intricate strokes
-    private val distanceThreshold = 10.0f
+    private val distanceThreshold = 5.0f
 
     var path = Path()
     var pathColor = Color.Blue
 
 
-    fun start( x : Int , y : Int ) {
+    fun start( x : Float , y : Float ) {
         prevPosX = x
         prevPosY = y
-        path.moveTo( x.toFloat() , y.toFloat() )
+        path.moveTo( x , y )
     }
 
-    fun addPoint( x : Int , y : Int ) {
-        val distance = sqrt( ( x - prevPosX ).toFloat().pow(2) + ( y - prevPosY ).toFloat().pow(2) )
+    fun addPoint( x : Float , y : Float ) {
+        distance = sqrt( ( x - prevPosX ).toFloat().pow(2) + ( y - prevPosY ).toFloat().pow(2) )
         // Check if distance from previous point is greater than a predefined threshold
         // It asserts that random fluctuations in MediaPipe predictions are not drawn on
         // the screen - eliminate jitterness
         if ( distance > distanceThreshold ) {
-            val midX = ( prevPosX + x ) / 2
-            val midY = ( prevPosY + y ) / 2
+            midX = ( prevPosX + x ) / 2
+            midY = ( prevPosY + y ) / 2
             // Perform Bezier interpolation to achieve smoother curves
-            path.quadraticBezierTo( prevPosX.toFloat(), prevPosY.toFloat(), midX.toFloat(), midY.toFloat())
+            path.quadraticBezierTo(prevPosX, prevPosY, midX, midY)
             prevPosX = x
             prevPosY = y
         }
@@ -43,8 +46,10 @@ class BrushPath {
 
     fun reset() {
         path = Path()
-        prevPosX = 0
-        prevPosY = 0
+        prevPosX = 0.0f
+        prevPosY = 0.0f
+        midX = 0.0f
+        midY = 0.0f
     }
 
 }

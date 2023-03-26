@@ -15,8 +15,9 @@ import com.google.mediapipe.tasks.core.OutputHandler
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarkerResult
+import kotlinx.coroutines.flow.MutableSharedFlow
 
-class FrameAnalyzer( private val context : Context , private val handLandmarksResult : ( IntArray ) -> Unit )
+class FrameAnalyzer( private val context : Context , private val handLandmarksResult : ( FloatArray ) -> Unit )
     : ImageAnalysis.Analyzer {
 
     private var isProcessing = false
@@ -28,24 +29,24 @@ class FrameAnalyzer( private val context : Context , private val handLandmarksRe
 
     private val resultListener = OutputHandler.ResultListener<HandLandmarkerResult, MPImage>{
             result, input ->
-        isProcessing = false
         for( handResult in result.landmarks() ) {
-            val landmark1 = handResult[8]  // Indicates INDEX_FINGER_TIP landmark
-            val landmark2 = handResult[12]  // Indicates MIDDLE_FINGER_TIP landmark
+            // handResult[8]  -> Indicates INDEX_FINGER_TIP landmark
+            // handResult[12] -> Indicates MIDDLE_FINGER_TIP landmark
             // landmark1 and landmark2 have normalized coordinates (lie in range [0, 1])
             // We multiply x-coordinates with the width of the screen
             // and y-coordinates with the height of the screen
             // to obtain coordinates for the screen
-            handLandmarksResult( intArrayOf(
-                ( landmark2.x() * layoutWidth  ).toInt() ,
-                ( landmark2.y() * layoutHeight ).toInt() ,
-                ( landmark1.x() * layoutWidth  ).toInt() ,
-                ( landmark1.y() * layoutHeight ).toInt() )  )
+            handLandmarksResult( floatArrayOf(
+                ( handResult[12].x() * layoutWidth  ),
+                ( handResult[12].y() * layoutHeight ) ,
+                ( handResult[8].x() * layoutWidth  ) ,
+                ( handResult[8].y() * layoutHeight ) )  )
         }
         if( result.landmarks().size == 0 ) {
             // If no landmarks are detected, pass an array of zeros
-            handLandmarksResult( IntArray( 4 ) )
+            handLandmarksResult( FloatArray( 4 ) )
         }
+        isProcessing = false
     }
 
     private val errorListener = ErrorListener {
@@ -67,6 +68,7 @@ class FrameAnalyzer( private val context : Context , private val handLandmarksRe
                 .setNumHands( 1 )
                 .setResultListener( resultListener )
                 .setErrorListener( errorListener )
+                .setMinHandDetectionConfidence( 0.7f )
                 .setRunningMode(RunningMode.LIVE_STREAM)
         val options = optionsBuilder.build()
         handLandmarker = HandLandmarker.createFromOptions( context , options )
@@ -77,7 +79,7 @@ class FrameAnalyzer( private val context : Context , private val handLandmarksRe
     }
 
     override fun analyze(image: ImageProxy) {
-        if( isProcessing ) {
+        if( isProcessing || handLandmarker == null ) {
             // An image is currently in processing, close the current image and return
             image.close()
             return
@@ -102,11 +104,10 @@ class FrameAnalyzer( private val context : Context , private val handLandmarksRe
 
         bitmapBuffer = Bitmap.createBitmap(
             bitmapBuffer, 0, 0, bitmapBuffer.width, bitmapBuffer.height,
-            overlayTransform, true)
+            overlayTransform, false)
 
-        if( handLandmarker != null ) {
-            handLandmarker!!.detectAsync( BitmapImageBuilder( bitmapBuffer ).build() , System.currentTimeMillis() )
-        }
+        handLandmarker!!.detectAsync( BitmapImageBuilder( bitmapBuffer ).build() , System.currentTimeMillis() )
+
     }
 
     fun setLayoutDims( width : Int , height : Int ) {
