@@ -1,3 +1,1 @@
-- Added demo video in `README.md`
-- Reduced stroke width to `3.dp`
-- Optimized imports
+- Removed video and added GIF to `README.md`

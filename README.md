@@ -17,10 +17,9 @@ for displaying the camera preview.
 * A physical Android device with a minimum OS version of SDK 24 (Android 7.0 - 
 Nougat) with developer mode enabled. The process of enabling developer mode may vary by device.
 
-<html>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/hvw4MFvplok" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-</html>
+![App Demo](resources/app_demo.gif)
 
+> Watch the [video on YouTube](https://youtu.be/hvw4MFvplok)
 > *The demo is recorded on an Android 12 device with a 32-bit Samsung Exynos 850 processor (4GB RAM)
 
 ### Building
