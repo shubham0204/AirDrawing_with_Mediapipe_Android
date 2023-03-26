@@ -1,2 +1,3 @@
-- Adopted `Float` and `FloatArray` to avoid repeated conversions between `Int` and `Float`
-- Changed drawing overlay background color
+- Added demo video in `README.md`
+- Reduced stroke width to `3.dp`
+- Optimized imports

@@ -3,7 +3,10 @@ package com.shubham0204.ml.mediapipehandsdemo
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PointF
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -30,17 +33,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
@@ -56,7 +56,6 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -288,13 +287,13 @@ class MainActivity : ComponentActivity() {
                             drawPath(
                                 path = brushPath.path,
                                 color = brushPath.pathColor,
-                                style = Stroke( 5.dp.toPx() )
+                                style = Stroke( 3.dp.toPx() )
                             )
                         }
                         drawPath(
                             brushManager.getCurrentStroke().path,
                             color = drawColorName.value ?: Color.Black,
-                            style = Stroke(5.dp.toPx())
+                            style = Stroke(3.dp.toPx())
                         )
                         drawCircle(
                             color = if (brushManager.isDrawing) {

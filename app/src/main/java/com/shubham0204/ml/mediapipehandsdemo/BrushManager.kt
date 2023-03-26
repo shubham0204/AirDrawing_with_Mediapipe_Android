@@ -1,7 +1,6 @@
 package com.shubham0204.ml.mediapipehandsdemo
 
 import androidx.compose.ui.graphics.Color
-import kotlin.math.atan
 import kotlin.math.pow
 import kotlin.math.sqrt
 

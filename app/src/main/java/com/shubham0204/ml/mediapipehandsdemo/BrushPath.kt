@@ -17,7 +17,7 @@ class BrushPath {
 
     // Threshold which determines whether a curve should be drawn from ( prevPosX , prevPosY ) to ( x , y )
     // Smaller the value, greater is the freedom to draw intricate strokes
-    private val distanceThreshold = 5.0f
+    private val distanceThreshold = 10.0f
 
     var path = Path()
     var pathColor = Color.Blue
@@ -30,7 +30,7 @@ class BrushPath {
     }
 
     fun addPoint( x : Float , y : Float ) {
-        distance = sqrt( ( x - prevPosX ).toFloat().pow(2) + ( y - prevPosY ).toFloat().pow(2) )
+        distance = sqrt( ( x - prevPosX ).pow(2) + ( y - prevPosY ).pow(2) )
         // Check if distance from previous point is greater than a predefined threshold
         // It asserts that random fluctuations in MediaPipe predictions are not drawn on
         // the screen - eliminate jitterness

@@ -1,6 +1,5 @@
 package com.shubham0204.ml.mediapipehandsdemo
 
-import android.graphics.Point
 import android.graphics.PointF
 
 // Data class which holds landmarks for the thumb and index finger

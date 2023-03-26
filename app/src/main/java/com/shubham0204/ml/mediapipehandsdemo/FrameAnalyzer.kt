@@ -15,7 +15,6 @@ import com.google.mediapipe.tasks.core.OutputHandler
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarkerResult
-import kotlinx.coroutines.flow.MutableSharedFlow
 
 class FrameAnalyzer( private val context : Context , private val handLandmarksResult : ( FloatArray ) -> Unit )
     : ImageAnalysis.Analyzer {
@@ -68,14 +67,9 @@ class FrameAnalyzer( private val context : Context , private val handLandmarksRe
                 .setNumHands( 1 )
                 .setResultListener( resultListener )
                 .setErrorListener( errorListener )
-                .setMinHandDetectionConfidence( 0.7f )
                 .setRunningMode(RunningMode.LIVE_STREAM)
         val options = optionsBuilder.build()
         handLandmarker = HandLandmarker.createFromOptions( context , options )
-    }
-
-    init {
-
     }
 
     override fun analyze(image: ImageProxy) {
