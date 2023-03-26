@@ -16,3 +16,4 @@ local.properties
 app/src/androidTest
 app/src/test
 app/src/main/assets/hand_landmarker.task
+.idea
