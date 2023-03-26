@@ -18,6 +18,7 @@ for displaying the camera preview.
 Nougat) with developer mode enabled. The process of enabling developer mode may vary by device.
 
 ![App Demo](https://github.com/shubham0204/AirDrawing_with_Mediapipe_Android/blob/main/resources/app_demo.gif)
+![image-removebg-preview](https://user-images.githubusercontent.com/106607805/227760929-bd64f9f4-a888-4fc7-8017-152e4aaf48c4.png)
 
 > Watch the [video on YouTube](https://youtu.be/hvw4MFvplok)
 > *The demo is recorded on an Android 12 device with a 32-bit Samsung Exynos 850 processor (4GB RAM)
@@ -28,7 +29,7 @@ Nougat) with developer mode enabled. The process of enabling developer mode may 
 
 ```
 git clone --depth=1 https://github.com/shubham0204/AirDrawing_with_Mediapipe_Android
-![image-removebg-preview](https://user-images.githubusercontent.com/106607805/227760929-bd64f9f4-a888-4fc7-8017-152e4aaf48c4.png)
+
 
 ```
 
